@@ -1,0 +1,5 @@
+if (provider.isPhantom) {
+    console.log('Phantom Wallet erkannt');
+} else {
+    console.log('Keine Phantom Wallet erkannt oder Wallet wurde nicht gefunden.');
+}
