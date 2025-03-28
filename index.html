@@ -7,99 +7,51 @@
 </head>
 
 
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Wallet Verbindung</title>
+</head>
 <body>
-    <h2>Spiele gegen einen Gegner</h2>
-    <button id="playButton">Spiel starten</button>
-    <br><br>
-    
-    <label for="betAmount">Einsatz in SOL:</label>
-    <input type="number" id="betAmount" placeholder="z. B. 0.1 SOL">
-    <br><br>
     <button id="connectButton">Wallet verbinden</button>
-    <button onclick="disconnectWallet()">Wallet trennen</button>
+    <div id="message"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.31.0/dist/index.iife.min.js"></script>
 
     <script>
-        // Solana Web3 Setup
-        let connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-        let provider = window.solana;  // Phantom Wallet oder andere Solana Wallets
+        const provider = window.solana;
+
+        // Überprüfen, ob Phantom Wallet verfügbar ist
+        if (provider && provider.isPhantom) {
+            console.log('Phantom Wallet erkannt');
+            document.getElementById('connectButton').addEventListener('click', connectWallet);
+        } else {
+            console.log('Phantom Wallet nicht erkannt');
+            alert('Phantom Wallet ist nicht installiert. Bitte installiere Phantom Wallet.');
+        }
 
         // Funktion zum Verbinden der Wallet
         async function connectWallet() {
-            if (!provider.isPhantom) {
-                alert("Phantom Wallet ist nicht installiert. Bitte installiere Phantom und versuche es erneut.");
-                return;
-            }
-
             try {
+                // Verbinde mit der Wallet
                 const response = await provider.connect();
-                console.log('Verbunden mit Wallet:', response.publicKey.toString());
-                alert('Wallet verbunden: ' + response.publicKey.toString());
+                
+                // Nur eine Nachricht anzeigen, dass das Wallet verbunden ist
+                document.getElementById('message').innerText = 'Wallet verbunden';
+                
+                console.log('Wallet verbunden:', response.publicKey.toString());
             } catch (err) {
                 console.error('Fehler beim Verbinden mit Wallet:', err);
-                alert('Fehler beim Verbinden mit der Wallet. Versuche es später erneut.');
+                alert('Fehler beim Verbinden mit der Wallet.');
             }
         }
-
-        // Funktion zum Trennen der Wallet
-        async function disconnectWallet() {
-            if (provider.isConnected) {
-                provider.disconnect();
-                console.log('Wallet getrennt');
-                alert('Wallet getrennt');
-            } else {
-                console.log('Keine verbundene Wallet.');
-            }
-        }
-
-        // Überprüfen, ob Phantom Wallet vorhanden ist
-        if (provider.isPhantom) {
-            console.log('Phantom Wallet erkannt');
-            // Wenn Phantom Wallet da ist, den Button aktivieren
-            document.getElementById('connectButton').addEventListener('click', connectWallet);
-        } else {
-            console.log('Phantom Wallet nicht erkannt. Stelle sicher, dass Phantom Wallet installiert ist.');
-            alert("Phantom Wallet nicht erkannt. Bitte installiere Phantom Wallet und versuche es erneut.");
-        }
-
-        // Spiel starten mit Einsatz
-        async function startGame() {
-            const betAmount = document.getElementById('betAmount').value;
-
-            if (betAmount <= 0) {
-                alert('Bitte einen gültigen Einsatz angeben');
-                return;
-            }
-
-            if (!provider.isConnected) {
-                alert('Bitte Wallet verbinden, bevor du das Spiel startest.');
-                return;
-            }
-
-            console.log(`Einsatz: ${betAmount} SOL`);
-
-            const transaction = new solanaWeb3.Transaction().add(
-                solanaWeb3.SystemProgram.transfer({
-                    fromPubkey: provider.publicKey,
-                    toPubkey: 'DeineSolanaAdresse',  // Hier deine Zieladresse angeben
-                    lamports: betAmount * solanaWeb3.LAMPORTS_PER_SOL, // Einsatz in Lamports (1 SOL = 10^9 Lamports)
-                })
-            );
-
-            try {
-                const signature = await connection.sendTransaction(transaction, [provider]);
-                await connection.confirmTransaction(signature);
-                console.log('Transaktion abgeschlossen:', signature);
-            } catch (err) {
-                console.error('Fehler bei der Transaktion:', err);
-            }
-        }
-
-        // Button für das Spiel starten
-        document.getElementById('playButton').addEventListener('click', function() {
-            startGame();
-        });
     </script>
 </body>
+</html>
 
 
 
