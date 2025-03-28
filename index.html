@@ -7,48 +7,61 @@
 </head>
 
 
-
-
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Schach</title>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.34.0/lib/index.iife.js"></script>
-</head>
 <body>
     <h2>Spiele gegen einen Gegner</h2>
     <button id="playButton">Spiel starten</button>
     <br><br>
     
-    <!-- Hier der neue Code für den Einsatz -->
     <label for="betAmount">Einsatz in SOL:</label>
     <input type="number" id="betAmount" placeholder="z. B. 0.1 SOL">
     <br><br>
-    <button onclick="connectWallet()">Wallet verbinden</button>
+    <button id="connectButton">Wallet verbinden</button>
     <button onclick="disconnectWallet()">Wallet trennen</button>
 
     <script>
-        // Solana Web3 Setup und Wallet-Verbindung hier
+        // Solana Web3 Setup
         let connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-        let provider = window.solana;
+        let provider = window.solana;  // Phantom Wallet oder andere Solana Wallets
 
+        // Funktion zum Verbinden der Wallet
+        async function connectWallet() {
+            if (!provider.isPhantom) {
+                alert("Phantom Wallet ist nicht installiert. Bitte installiere Phantom und versuche es erneut.");
+                return;
+            }
+
+            try {
+                const response = await provider.connect();
+                console.log('Verbunden mit Wallet:', response.publicKey.toString());
+                alert('Wallet verbunden: ' + response.publicKey.toString());
+            } catch (err) {
+                console.error('Fehler beim Verbinden mit Wallet:', err);
+                alert('Fehler beim Verbinden mit der Wallet. Versuche es später erneut.');
+            }
+        }
+
+        // Funktion zum Trennen der Wallet
+        async function disconnectWallet() {
+            if (provider.isConnected) {
+                provider.disconnect();
+                console.log('Wallet getrennt');
+                alert('Wallet getrennt');
+            } else {
+                console.log('Keine verbundene Wallet.');
+            }
+        }
+
+        // Überprüfen, ob Phantom Wallet vorhanden ist
         if (provider.isPhantom) {
             console.log('Phantom Wallet erkannt');
+            // Wenn Phantom Wallet da ist, den Button aktivieren
+            document.getElementById('connectButton').addEventListener('click', connectWallet);
+        } else {
+            console.log('Phantom Wallet nicht erkannt. Stelle sicher, dass Phantom Wallet installiert ist.');
+            alert("Phantom Wallet nicht erkannt. Bitte installiere Phantom Wallet und versuche es erneut.");
         }
 
-        // Funktionen für Wallet verbinden und trennen, und Spielstart hier
-        async function connectWallet() {
-            const response = await provider.connect();
-            console.log('Wallet verbunden:', response.publicKey.toString());
-        }
-
-        async function disconnectWallet() {
-            provider.disconnect();
-            console.log('Wallet getrennt');
-        }
-
+        // Spiel starten mit Einsatz
         async function startGame() {
             const betAmount = document.getElementById('betAmount').value;
 
@@ -67,8 +80,8 @@
             const transaction = new solanaWeb3.Transaction().add(
                 solanaWeb3.SystemProgram.transfer({
                     fromPubkey: provider.publicKey,
-                    toPubkey: 'DeineSolanaAdresse',
-                    lamports: betAmount * solanaWeb3.LAMPORTS_PER_SOL,
+                    toPubkey: 'DeineSolanaAdresse',  // Hier deine Zieladresse angeben
+                    lamports: betAmount * solanaWeb3.LAMPORTS_PER_SOL, // Einsatz in Lamports (1 SOL = 10^9 Lamports)
                 })
             );
 
@@ -81,13 +94,17 @@
             }
         }
 
+        // Button für das Spiel starten
         document.getElementById('playButton').addEventListener('click', function() {
             startGame();
         });
     </script>
-
 </body>
-</html>
+
+
+
+   
+      
 
 
 
