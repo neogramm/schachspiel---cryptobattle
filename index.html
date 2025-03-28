@@ -15,56 +15,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Wallet Verbindung</title>
-</head>
-<body>
-    <button id="connectButton">Wallet verbinden</button>
-    <div id="message"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.31.0/dist/index.iife.min.js"></script>
-
-    <script>
-        const provider = window.solana;
-
-        // Überprüfen, ob Phantom Wallet verfügbar ist
-        if (provider && provider.isPhantom) {
-            console.log('Phantom Wallet erkannt');
-            document.getElementById('connectButton').addEventListener('click', connectWallet);
-        } else {
-            console.log('Phantom Wallet nicht erkannt');
-            alert('Phantom Wallet ist nicht installiert. Bitte installiere Phantom Wallet.');
-        }
-
-        // Funktion zum Verbinden der Wallet
-        async function connectWallet() {
-            try {
-                // Verbinde mit der Wallet
-                const response = await provider.connect();
-                
-                // Nur eine Nachricht anzeigen, dass das Wallet verbunden ist
-                document.getElementById('message').innerText = 'Wallet verbunden';
-                
-                console.log('Wallet verbunden:', response.publicKey.toString());
-            } catch (err) {
-                console.error('Fehler beim Verbinden mit Wallet:', err);
-                alert('Fehler beim Verbinden mit der Wallet.');
-            }
-        }
-    </script>
-</body>
-</html>
 
 
-
-   
-      
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Wallet mit Einsatz</title>
@@ -83,15 +35,20 @@
         }
     </style>
 </head>
-<body>
+
+    
+    
+    
+    <body>
     <h1>Schachspiel mit Solana Einsatz</h1>
     
+    <!-- Wallet verbinden Button -->
     <button id="connectButton">Wallet verbinden</button>
 
     <!-- Input Feld für den Einsatzbetrag -->
     <div class="bet-amount">
         <label for="betAmount">Setze deinen Einsatz (0.1 bis 1 SOL):</label>
-        <input type="number" id="betAmount" placeholder="Einsatz in SOL" min="0.1" max="1" step="0.1" />
+        <input type="number" id="betAmount" placeholder="Einsatz in SOL" min="0.1" max="1" step="0.1" disabled />
         <p id="betAmountDisplay">Einsatz: 0.1 SOL</p>
     </div>
 
@@ -102,9 +59,8 @@
 
     <script>
         const provider = window.solana;
-        let playerWallet;
+        let playerWallet = null;
         let playerBet = 0;
-        let opponentBet = 0;
 
         // Überprüfen, ob Phantom Wallet verfügbar ist
         if (provider && provider.isPhantom) {
@@ -117,23 +73,25 @@
 
         // Funktion zum Verbinden der Wallet
         async function connectWallet() {
-            if (provider && provider.isConnected) {
-                // Wenn das Wallet bereits verbunden ist, trennen wir es
-                provider.disconnect();
+            if (provider.isConnected) {
+                // Disconnect und den Button zurücksetzen
+                await provider.disconnect();
                 playerWallet = null;
                 playerBet = 0;
                 document.getElementById('connectButton').innerText = 'Wallet verbinden';
                 document.getElementById('message').innerText = 'Wallet getrennt';
                 document.getElementById('startGameButton').disabled = true;
                 document.getElementById('betAmount').disabled = true;
+                document.getElementById('betAmount').value = '';
                 return;
             }
 
             try {
+                // Wallet verbinden
                 const response = await provider.connect();
                 playerWallet = response.publicKey.toString();
                 document.getElementById('connectButton').innerText = 'Wallet trennen';
-                document.getElementById('message').innerText = 'Wallet verbunden';
+                document.getElementById('message').innerText = `Wallet verbunden: ${playerWallet}`;
                 document.getElementById('startGameButton').disabled = false;
                 document.getElementById('betAmount').disabled = false;
                 console.log('Wallet verbunden:', playerWallet);
@@ -143,49 +101,33 @@
             }
         }
 
-        // Wenn der Einsatzbetrag geändert wird, aktualisiere die Anzeige
+        // Einsatzbetrag ändern und validieren
         document.getElementById('betAmount').addEventListener('input', function() {
             const betAmountValue = parseFloat(this.value);
-            if (betAmountValue && betAmountValue % 0.1 === 0) {
+            if (betAmountValue && betAmountValue % 0.1 === 0 && betAmountValue >= 0.1 && betAmountValue <= 1) {
+                playerBet = betAmountValue;
                 document.getElementById('betAmountDisplay').innerText = `Einsatz: ${betAmountValue} SOL`;
             } else {
+                playerBet = 0;
                 document.getElementById('betAmountDisplay').innerText = 'Einsatz: Ungültig (nur 0.1 Schritte erlaubt)';
             }
         });
 
-        // Funktion, um das Spiel zu starten
+        // Start-Button für das Spiel
         document.getElementById('startGameButton').addEventListener('click', startGame);
 
         async function startGame() {
-            const betAmount = parseFloat(document.getElementById('betAmount').value);
-
-            if (!betAmount || betAmount <= 0) {
-                alert('Bitte einen gültigen Einsatzbetrag eingeben!');
+            if (!playerWallet) {
+                alert('Wallet nicht verbunden!');
                 return;
             }
 
-            // Sicherstellen, dass der Einsatz in 0.1 SOL Schritten liegt
-            if (betAmount % 0.1 !== 0) {
-                alert('Der Einsatz muss in 0.1 SOL Schritten erfolgen (z.B. 0.1, 0.2, 0.3,...).');
+            if (playerBet <= 0) {
+                alert('Bitte einen gültigen Einsatz setzen (zwischen 0.1 und 1 SOL).');
                 return;
             }
 
-            // Setze den Einsatz des Spielers
-            if (playerBet === 0) {
-                playerBet = betAmount;
-                document.getElementById('message').innerText = `Dein Einsatz: ${betAmount} SOL`;
-            }
-
-            // Zum Testen nehmen wir einfach den gleichen Einsatz für den Gegner an
-            opponentBet = betAmount; // Dies könnte dynamisch durch den Gegner festgelegt werden
-
-            // Sicherstellen, dass beide Spieler denselben Einsatz haben
-            if (playerBet !== opponentBet) {
-                alert('Beide Spieler müssen den gleichen Einsatz setzen!');
-                return;
-            }
-
-            // Überprüfen, ob der Spieler genug SOL hat
+            // Zum Testen: Prüfen des Spieler-Guthabens im Wallet
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
             const balance = await connection.getBalance(playerWallet);
             console.log('Spieler-Guthaben:', balance / solanaWeb3.LAMPORTS_PER_SOL, 'SOL');
@@ -195,7 +137,7 @@
                 return;
             }
 
-            // Erstelle eine Transaktion, um den Einsatz zu überweisen
+            // Übertragung des Einsatzes an den Gegner oder Treuhand-Wallet
             const transaction = new solanaWeb3.Transaction();
             const toPublicKey = new solanaWeb3.PublicKey("ZIEL-WALLET-ADRESSE"); // Ziel-Wallet des Gegners oder Treuhand-Wallet
 
@@ -209,16 +151,27 @@
                 })
             );
 
-            // Signiere und sende die Transaktion
             try {
                 const signature = await provider.sendTransaction(transaction);
                 const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
                 await connection.confirmTransaction(signature);
                 alert('Einsatz erfolgreich übertragen!');
-                // Nun kann das Spiel beginnen
+                // Spiel starten
                 startChessGame();
             } catch (err) {
-                console.error('Fe
+                console.error('Fehler bei der Übertragung:', err);
+                alert('Fehler bei der Übertragung des Einsatzes.');
+            }
+        }
+
+        // Funktion zum Starten des Schachspiels
+        function startChessGame() {
+            // Deine Logik zum Starten des Schachspiels
+            alert('Das Schachspiel startet jetzt!');
+        }
+    </script>
+</body>
+</html>
 
 
 
