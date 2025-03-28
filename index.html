@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Schach</title>
+</head>
+<body>
+    <h2>Spiele gegen einen Gegner</h2>
+    <button id="playButton">Spiel starten</button>
+    <iframe id="gameFrame" width="600" height="397" frameborder="0"></iframe>
+
+    <script>
+        document.getElementById('playButton').addEventListener('click', function() {
+            document.getElementById('gameFrame').src = "https://lichess.org/?any";
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+My chess site
