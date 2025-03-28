@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Schach</title>
+    <!-- Solana Web3.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.34.0/lib/index.iife.js"></script>
+</head>
+
+
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Schach</title>
@@ -18,4 +30,93 @@
     </script>
 </body>
 </html>
+
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Schach</title>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.34.0/lib/index.iife.js"></script>
+</head>
+<body>
+    <h2>Spiele gegen einen Gegner</h2>
+    <button id="playButton">Spiel starten</button>
+    <br><br>
+    
+    <!-- Hier der neue Code für den Einsatz -->
+    <label for="betAmount">Einsatz in SOL:</label>
+    <input type="number" id="betAmount" placeholder="z. B. 0.1 SOL">
+    <br><br>
+    <button onclick="connectWallet()">Wallet verbinden</button>
+    <button onclick="disconnectWallet()">Wallet trennen</button>
+
+    <script>
+        // Solana Web3 Setup und Wallet-Verbindung hier
+        let connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+        let provider = window.solana;
+
+        if (provider.isPhantom) {
+            console.log('Phantom Wallet erkannt');
+        }
+
+        // Funktionen für Wallet verbinden und trennen, und Spielstart hier
+        async function connectWallet() {
+            const response = await provider.connect();
+            console.log('Wallet verbunden:', response.publicKey.toString());
+        }
+
+        async function disconnectWallet() {
+            provider.disconnect();
+            console.log('Wallet getrennt');
+        }
+
+        async function startGame() {
+            const betAmount = document.getElementById('betAmount').value;
+
+            if (betAmount <= 0) {
+                alert('Bitte einen gültigen Einsatz angeben');
+                return;
+            }
+
+            if (!provider.isConnected) {
+                alert('Bitte Wallet verbinden, bevor du das Spiel startest.');
+                return;
+            }
+
+            console.log(`Einsatz: ${betAmount} SOL`);
+
+            const transaction = new solanaWeb3.Transaction().add(
+                solanaWeb3.SystemProgram.transfer({
+                    fromPubkey: provider.publicKey,
+                    toPubkey: 'DeineSolanaAdresse',
+                    lamports: betAmount * solanaWeb3.LAMPORTS_PER_SOL,
+                })
+            );
+
+            try {
+                const signature = await connection.sendTransaction(transaction, [provider]);
+                await connection.confirmTransaction(signature);
+                console.log('Transaktion abgeschlossen:', signature);
+            } catch (err) {
+                console.error('Fehler bei der Transaktion:', err);
+            }
+        }
+
+        document.getElementById('playButton').addEventListener('click', function() {
+            startGame();
+        });
+    </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
 
