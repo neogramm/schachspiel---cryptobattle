@@ -61,6 +61,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,10 +75,17 @@
         input[type="number"] {
             width: 100px;
         }
+        #connectButton {
+            margin-bottom: 20px;
+        }
+        #startGameButton {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Schachspiel mit Solana Einsatz</h1>
+    
     <button id="connectButton">Wallet verbinden</button>
 
     <!-- Input Feld für den Einsatzbetrag -->
@@ -109,11 +117,25 @@
 
         // Funktion zum Verbinden der Wallet
         async function connectWallet() {
+            if (provider && provider.isConnected) {
+                // Wenn das Wallet bereits verbunden ist, trennen wir es
+                provider.disconnect();
+                playerWallet = null;
+                playerBet = 0;
+                document.getElementById('connectButton').innerText = 'Wallet verbinden';
+                document.getElementById('message').innerText = 'Wallet getrennt';
+                document.getElementById('startGameButton').disabled = true;
+                document.getElementById('betAmount').disabled = true;
+                return;
+            }
+
             try {
                 const response = await provider.connect();
                 playerWallet = response.publicKey.toString();
+                document.getElementById('connectButton').innerText = 'Wallet trennen';
                 document.getElementById('message').innerText = 'Wallet verbunden';
                 document.getElementById('startGameButton').disabled = false;
+                document.getElementById('betAmount').disabled = false;
                 console.log('Wallet verbunden:', playerWallet);
             } catch (err) {
                 console.error('Fehler beim Verbinden mit Wallet:', err);
@@ -124,7 +146,11 @@
         // Wenn der Einsatzbetrag geändert wird, aktualisiere die Anzeige
         document.getElementById('betAmount').addEventListener('input', function() {
             const betAmountValue = parseFloat(this.value);
-            document.getElementById('betAmountDisplay').innerText = `Einsatz: ${betAmountValue} SOL`;
+            if (betAmountValue && betAmountValue % 0.1 === 0) {
+                document.getElementById('betAmountDisplay').innerText = `Einsatz: ${betAmountValue} SOL`;
+            } else {
+                document.getElementById('betAmountDisplay').innerText = 'Einsatz: Ungültig (nur 0.1 Schritte erlaubt)';
+            }
         });
 
         // Funktion, um das Spiel zu starten
@@ -132,6 +158,7 @@
 
         async function startGame() {
             const betAmount = parseFloat(document.getElementById('betAmount').value);
+
             if (!betAmount || betAmount <= 0) {
                 alert('Bitte einen gültigen Einsatzbetrag eingeben!');
                 return;
@@ -149,9 +176,7 @@
                 document.getElementById('message').innerText = `Dein Einsatz: ${betAmount} SOL`;
             }
 
-            // Hier musst du den Gegner einbinden (normalerweise wird dies über ein Backend oder einen Matchmaking-Mechanismus gemacht)
-            // Der Gegner setzt ebenfalls seinen Einsatz
-            // Zum Testen nehmen wir einfach einen festgelegten Wert für den Gegner
+            // Zum Testen nehmen wir einfach den gleichen Einsatz für den Gegner an
             opponentBet = betAmount; // Dies könnte dynamisch durch den Gegner festgelegt werden
 
             // Sicherstellen, dass beide Spieler denselben Einsatz haben
@@ -193,19 +218,7 @@
                 // Nun kann das Spiel beginnen
                 startChessGame();
             } catch (err) {
-                console.error('Fehler bei der Übertragung:', err);
-                alert('Fehler bei der Übertragung des Einsatzes.');
-            }
-        }
-
-        // Funktion zum Starten des Schachspiels (Hier muss deine Logik integriert werden)
-        function startChessGame() {
-            // Spiel-Startlogik hier (z. B. Weiterleitung zu einer Schachseite)
-            alert('Das Spiel startet jetzt!');
-        }
-    </script>
-</body>
-</html>
+                console.error('Fe
 
 
 
