@@ -116,26 +116,55 @@
         // Start-Button für das Spiel
         document.getElementById('startGameButton').addEventListener('click', startGame);
 
-        async function startGame() {
-            if (!playerWallet) {
-                alert('Wallet nicht verbunden!');
-                return;
-            }
+       
+            async function startGame() {
+    if (!playerWallet) {
+        alert('Wallet nicht verbunden!');
+        return;
+    }
 
-            if (playerBet <= 0) {
-                alert('Bitte einen gültigen Einsatz setzen (zwischen 0.1 und 1 SOL).');
-                return;
-            }
+    if (playerBet <= 0) {
+        alert('Bitte einen gültigen Einsatz setzen (zwischen 0.1 und 1 SOL).');
+        return;
+    }
 
-            // Zum Testen: Prüfen des Spieler-Guthabens im Wallet
-            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-            const balance = await connection.getBalance(playerWallet);
-            console.log('Spieler-Guthaben:', balance / solanaWeb3.LAMPORTS_PER_SOL, 'SOL');
+    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
 
-            if (balance < playerBet * solanaWeb3.LAMPORTS_PER_SOL) {
-                alert('Nicht genügend SOL im Wallet für diesen Einsatz.');
-                return;
-            }
+    // Wandle die Adresse in ein PublicKey-Objekt um
+    const playerPublicKey = new solanaWeb3.PublicKey(playerWallet);
+
+    // Aktuellen Kontostand abrufen
+    const balance = await connection.getBalance(playerPublicKey);
+    const lamports = playerBet * solanaWeb3.LAMPORTS_PER_SOL;
+
+    if (balance < lamports) {
+        alert(`Nicht genügend Guthaben. Du hast nur ${(balance / solanaWeb3.LAMPORTS_PER_SOL).toFixed(2)} SOL.`);
+        return;
+    }
+
+    // Einsatz übertragen
+    const transaction = new solanaWeb3.Transaction();
+    const toPublicKey = new solanaWeb3.PublicKey("ZIEL-WALLET-ADRESSE"); // Zieladresse anpassen
+
+    transaction.add(
+        solanaWeb3.SystemProgram.transfer({
+            fromPubkey: playerPublicKey,
+            toPubkey: toPublicKey,
+            lamports: lamports,
+        })
+    );
+
+    try {
+        const signature = await provider.sendTransaction(transaction, connection);
+        await connection.confirmTransaction(signature);
+        alert('Einsatz erfolgreich übertragen!');
+        startChessGame();
+    } catch (err) {
+        console.error('Fehler bei der Übertragung:', err);
+        alert('Übertragung fehlgeschlagen. Bitte versuche es erneut.');
+    }
+}
+
 
             // Übertragung des Einsatzes an den Gegner oder Treuhand-Wallet
             const transaction = new solanaWeb3.Transaction();
