@@ -38,3 +38,5 @@ app.post('/join', async (req, res) => {
 
 app.listen(PORT, () => console.log(`Server läuft auf http://localhost:${PORT}`));
 GET https://lichess.org/game/export/{gameId}
+require('dotenv').config();
+const token = process.env.LICHESS_TOKEN;
