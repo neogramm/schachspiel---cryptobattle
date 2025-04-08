@@ -244,3 +244,44 @@
 
 
 
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Solana Escrow Test</title>
+</head>
+<body>
+
+  <h1>Escrow Wallet Test</h1>
+  <button onclick="createEscrowWallet()">Escrow Wallet Erstellen</button>
+
+  <div id="response"></div>
+
+  <script>
+    async function createEscrowWallet() {
+      try {
+        const response = await fetch('http://localhost:3000/create-escrow-wallet');
+        const data = await response.json();
+        
+        if (data.success) {
+          document.getElementById('response').innerText = `Escrow Wallet Adresse: ${data.escrowWallet}`;
+          document.getElementById('response').innerText += `\nTransaktionssignatur: ${data.transactionSignature}`;
+        } else {
+          document.getElementById('response').innerText = 'Fehler beim Erstellen des Escrow-Wallets!';
+        }
+      } catch (error) {
+        console.error('Fehler:', error);
+      }
+    }
+  </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
