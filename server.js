@@ -137,3 +137,61 @@ app.post('/winner/:winnerWallet', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server läuft auf http://localhost:${port}`);
 });
+
+
+
+
+
+
+
+// server.js
+
+const express = require('express');
+const { Connection, Keypair, LAMPORTS_PER_SOL, Transaction, SystemProgram } = require('@solana/web3.js');
+
+const app = express();
+const port = 3000;
+
+// Erstelle eine Verbindung zur Solana Blockchain (Devnet)
+const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+
+// Route zum Erstellen eines Escrow-Wallets
+app.get('/create-escrow-wallet', async (req, res) => {
+  try {
+    // Generiere ein neues Escrow-Wallet
+    const escrowWallet = Keypair.generate();
+    console.log('Escrow Wallet Adresse:', escrowWallet.publicKey.toBase58());
+
+    // Sende Solana zum Escrow-Wallet (Nur zu Testzwecken, über Faucets)
+    const fromWallet = Keypair.generate(); // Dein Test-Wallet
+    const airdropSignature = await connection.requestAirdrop(fromWallet.publicKey, 2 * LAMPORTS_PER_SOL);
+
+    await connection.confirmTransaction(airdropSignature);
+
+    // Transaktion erstellen, um Solana ins Escrow-Wallet zu senden
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: fromWallet.publicKey,
+        toPubkey: escrowWallet.publicKey,
+        lamports: 0.5 * LAMPORTS_PER_SOL // 0.5 SOL auf das Escrow-Wallet überweisen
+      })
+    );
+
+    // Transaktion senden
+    const signature = await connection.sendTransaction(transaction, [fromWallet]);
+
+    res.json({
+      success: true,
+      escrowWallet: escrowWallet.publicKey.toBase58(),
+      transactionSignature: signature
+    });
+  } catch (error) {
+    console.error('Fehler beim Erstellen des Escrow-Wallets:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Starte den Server
+app.listen(port, () => {
+  console.log(`Server läuft auf http://localhost:${port}`);
+});
