@@ -74,3 +74,66 @@ app.post('/winner/:winnerWallet', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server läuft auf http://localhost:${port}`);
 });
+
+
+
+
+
+
+
+
+
+
+const express = require('express');
+const { Connection, clusterApiUrl, Keypair, Transaction, SystemProgram, PublicKey } = require('@solana/web3.js');
+const app = express();
+const port = 3000;
+
+// Dummy-Daten für Spieler und deren Einsätze
+let players = [
+    { wallet: 'Player1WalletAddress', bet: 0.5 },
+    { wallet: 'Player2WalletAddress', bet: 0.5 }
+];
+
+// Escrow Account (für Transaktionen)
+const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+const escrowAccount = Keypair.generate(); // Escrow-Wallet
+
+app.use(express.json());  // Body-Parser für JSON
+
+// Gewinner Auszahlung
+app.post('/winner/:winnerWallet', async (req, res) => {
+    const winner = req.params.winnerWallet;
+    const winnerAmount = (players[0].bet + players[1].bet) * 0.9;
+    const commission = (players[0].bet + players[1].bet) * 0.1;
+
+    try {
+        const winnerPublicKey = new PublicKey(winner);
+        const transaction = new Transaction()
+            .add(
+                SystemProgram.transfer({
+                    fromPubkey: escrowAccount.publicKey,
+                    toPubkey: winnerPublicKey,
+                    lamports: winnerAmount * 1e9, // Umrechnung von SOL in Lamports
+                })
+            )
+            .add(
+                SystemProgram.transfer({
+                    fromPubkey: escrowAccount.publicKey,
+                    toPubkey: 'YourWalletPublicKeyHere', // Dein Wallet
+                    lamports: commission * 1e9,
+                })
+            );
+
+        const signature = await connection.sendTransaction(transaction, [escrowAccount]);
+        await connection.confirmTransaction(signature);
+
+        res.send({ message: 'Gewinner erfolgreich ausgezahlt!' });
+    } catch (err) {
+        res.status(500).send({ message: 'Fehler bei der Auszahlung: ' + err.message });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server läuft auf http://localhost:${port}`);
+});
