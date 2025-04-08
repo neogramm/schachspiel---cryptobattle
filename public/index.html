@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Schach mit Solana</title>
+</head>
+<body>
+  <h1>Verbinde dein Wallet</h1>
+  <button onclick="connectWallet()">Wallet verbinden</button>
+  <p id="walletAddress"></p>
+
+  <h2>Einsatz wählen</h2>
+  <select id="bet">
+    <option value="0.1">0.1 SOL</option>
+    <option value="0.2">0.2 SOL</option>
+    <option value="0.3">0.3 SOL</option>
+    <option value="0.4">0.4 SOL</option>
+    <option value="0.5">0.5 SOL</option>
+    <option value="0.6">0.6 SOL</option>
+    <option value="0.7">0.7 SOL</option>
+    <option value="0.8">0.8 SOL</option>
+    <option value="0.9">0.9 SOL</option>
+    <option value="1.0">1.0 SOL</option>
+  </select>
+  <button onclick="joinGame()">Spiel starten</button>
+
+  <p id="response"></p>
+
+  <script>
+    let walletAddress = "";
+
+    async function connectWallet() {
+      const resp = await window.solana.connect();
+      walletAddress = resp.publicKey.toString();
+      document.getElementById("walletAddress").innerText = "Wallet: " + walletAddress;
+    }
+
+    async function joinGame() {
+      const bet = parseFloat(document.getElementById("bet").value);
+      const res = await fetch('/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet: walletAddress, bet })
+      });
+
+      const data = await res.json();
+      document.getElementById("response").innerText = data.message;
+      if (data.lichess) window.location.href = data.lichess;
+    }
+  </script>
+</body>
+</html>
