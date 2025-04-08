@@ -54,3 +54,61 @@ async function startGame() {
         alert('Fehler bei der Übertragung des Einsatzes: ' + err.message);
     }
 }
+
+
+
+
+
+
+
+// Erstelle ein neues Schach-Objekt
+const chess = new Chess();
+
+// Funktion, um den Spielstand zu prüfen und die Züge anzuzeigen
+function displayBoard() {
+    // Hier kannst du den aktuellen Schachstand anzeigen, z.B. in einem HTML-Element
+    const board = document.getElementById('board');
+    board.innerText = chess.ascii(); // Zeigt das Schachbrett in ASCII an (du kannst auch eine andere Darstellung verwenden)
+    document.getElementById('status').innerText = chess.game_over() ? 'Spiel beendet' : 'Spiel läuft';
+}
+
+// Funktion, um einen Zug zu machen
+function makeMove(move) {
+    const result = chess.move(move);
+    if (result === null) {
+        alert('Ungültiger Zug!');
+        return;
+    }
+    displayBoard();
+    checkGameOver();
+}
+
+// Funktion, um das Spiel zu beenden, wenn jemand gewonnen hat
+function checkGameOver() {
+    if (chess.game_over()) {
+        const winner = chess.turn() === 'w' ? 'Schwarz hat gewonnen' : 'Weiß hat gewonnen';
+        alert(winner);
+        // Hier kannst du den Gewinner ermitteln und den Einsatz auszahlen (Backend).
+        sendWinnerToBackend(winner);
+    }
+}
+
+// Beispiel, um den Gewinner an das Backend zu senden (hier wirst du den Gewinner zur Auszahlung an dein Treuhand-Wallet schicken)
+function sendWinnerToBackend(winner) {
+    fetch('/winner/' + winner)
+        .then(response => response.json())
+        .then(data => {
+            alert('Gewinner wurde ausgezahlt!');
+        })
+        .catch(error => {
+            console.error('Fehler:', error);
+        });
+}
+
+// Beispiel für einen Spielzug (hier solltest du die Logik anpassen, wie Züge eingegeben werden)
+document.getElementById('moveButton').addEventListener('click', () => {
+    const move = document.getElementById('moveInput').value; // Nimm den Zug vom Spieler
+    makeMove(move);
+});
+
+displayBoard(); // Zu Beginn das Schachbrett anzeigen
